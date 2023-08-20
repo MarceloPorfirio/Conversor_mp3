@@ -1,59 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Video to MP3 Converter</title>
+    <title>YouTube to MP3 Converter</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 2s linear infinite;
-            margin: auto;
-            display: none;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h1>Video to MP3 Converter</h1>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="alert alert-success mt-3">
-                    {{ messages[0] }}
-                </div>
-            {% endif %}
-        {% endwith %}
-        <form id="conversion-form" method="POST" enctype="multipart/form-data">
+        <h1>YouTube to MP3 Converter</h1>
+        <form method="POST">
             <div class="form-group mt-4">
-                <label for="file">Select a video file:</label>
-                <input type="file" class="form-control-file" id="file" name="file" accept=".mp4, .avi, .mov">
+                <label for="url">Entre com YouTube URL:</label>
+                <input type="text" class="form-control" id="url" name="url" placeholder="https://www.youtube.com/watch?v=...">
             </div>
-            <button type="submit" class="btn btn-primary">Convert to MP3</button>
+            <button type="submit" class="btn btn-primary">Converter para MP3</button>
         </form>
-        <div class="loader"></div>
-        <div class="alert alert-success mt-3" id="success-alert" style="display: none;">
-            Conversion completed!
+        <div class="alert alert-success mt-3" id="conversion-success" style="display: none;">
+            Conversão completa! Seu arquivo MP3 está pronto.
         </div>
+        <div id="loading-spinner" class="spinner-border text-primary mt-2" style="display: none;"></div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const form = document.querySelector('#conversion-form');
-            const loader = document.querySelector('.loader');
-            const successAlert = document.querySelector('#success-alert');
+            const form = document.querySelector('form');
+            const successAlert = document.querySelector('#conversion-success');
+            const loadingSpinner = document.querySelector('#loading-spinner');
 
             form.addEventListener('submit', function (event) {
                 event.preventDefault();
-                loader.style.display = 'block';
                 successAlert.style.display = 'none';
+                loadingSpinner.style.display = 'block';
 
                 const formData = new FormData(form);
                 const xhr = new XMLHttpRequest();
@@ -61,9 +36,8 @@
                 xhr.open('POST', '/');
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === XMLHttpRequest.DONE) {
-                        loader.style.display = 'none';
                         if (xhr.status === 200) {
-                            checkConversionStatus(); // Chamar função para verificar status
+                            checkConversionStatus();
                         } else {
                             alert('An error occurred during conversion.');
                         }
@@ -79,9 +53,13 @@
                     if (xhr.readyState === XMLHttpRequest.DONE) {
                         const status = JSON.parse(xhr.responseText);
                         if (status.percent === 100) {
+                            loadingSpinner.style.display = 'none';
                             successAlert.style.display = 'block';
+                            setTimeout(function () {
+                                window.location.reload();
+                            }, 6000); // Espera 6 segundos antes de recarregar a página
                         } else {
-                            setTimeout(checkConversionStatus, 1000); // Verificar novamente após 1 segundo
+                            setTimeout(checkConversionStatus, 1000);
                         }
                     }
                 };
